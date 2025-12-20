@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 
-const bannerRoutes = require("./routes/banners");
+const bannerRoutes = require("./routes/banner");
 
 const app = express();
 app.use(cors());
