@@ -1,9 +1,9 @@
-import express from "express";
-import pool from "../db.js";
+const express = require("express");
+const pool = require("../db");
 
-import multer from "multer";
-import { CloudinaryStorage } from "multer-storage-cloudinary";
-import { v2 as cloudinary } from "cloudinary"; // already configured elsewhere
+const multer = require("multer");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const { v2: cloudinary } = require("cloudinary");
 
 /* ===============================
    MULTER + CLOUDINARY STORAGE
@@ -47,11 +47,11 @@ router.get("/", async (req, res) => {
   }
 });
 
-/* CREATE BLOG (WITH IMAGE UPLOAD) */
+/* CREATE BLOG */
 router.post("/create", upload.single("image"), async (req, res) => {
   try {
     const { title, description, slug } = req.body;
-    const image_url = req.file.path; // Cloudinary URL
+    const image_url = req.file.path;
 
     const blog = await pool.query(
       `INSERT INTO blogs (title, description, image_url, slug)
@@ -65,7 +65,7 @@ router.post("/create", upload.single("image"), async (req, res) => {
   }
 });
 
-/* TOGGLE BLOG VISIBILITY */
+/* TOGGLE */
 router.patch("/:id", async (req, res) => {
   try {
     const blog = await pool.query(
@@ -78,7 +78,7 @@ router.patch("/:id", async (req, res) => {
   }
 });
 
-/* DELETE BLOG */
+/* DELETE */
 router.delete("/:id", async (req, res) => {
   try {
     await pool.query("DELETE FROM blogs WHERE id=$1", [req.params.id]);
@@ -88,4 +88,4 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-export default router;
+module.exports = router; // ✅ IMPORTANT
