@@ -27,13 +27,14 @@ const router = express.Router();
 router.get("/all", async (req, res) => {
   try {
     const blogs = await pool.query(
-      "SELECT * FROM blogs WHERE is_active=true ORDER BY created_at DESC"
+      "SELECT * FROM blogs ORDER BY created_at DESC"
     );
     res.json(blogs.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 /* ADMIN – GET ALL BLOGS */
 router.get("/", async (req, res) => {
@@ -50,13 +51,15 @@ router.get("/", async (req, res) => {
 /* CREATE BLOG */
 router.post("/create", upload.single("image"), async (req, res) => {
   try {
-    const { title, description, slug } = req.body;
+    const { title, slug, description, fullContent } = req.body;
     const image_url = req.file.path;
 
     const blog = await pool.query(
-      `INSERT INTO blogs (title, description, image_url, slug)
-       VALUES ($1,$2,$3,$4) RETURNING *`,
-      [title, description, image_url, slug]
+      `INSERT INTO blogs 
+       (title, slug, description, full_content, image_url)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING *`,
+      [title, slug, description, fullContent, image_url]
     );
 
     res.json(blog.rows[0]);
@@ -64,6 +67,23 @@ router.post("/create", upload.single("image"), async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+router.get("/:id", async (req, res) => {
+  try {
+    const blog = await pool.query(
+      "SELECT * FROM blogs WHERE id = $1",
+      [req.params.id]
+    );
+
+    if (!blog.rows.length) {
+      return res.status(404).json({ message: "Blog not found" });
+    }
+
+    res.json(blog.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 /* TOGGLE */
 router.patch("/:id", async (req, res) => {
