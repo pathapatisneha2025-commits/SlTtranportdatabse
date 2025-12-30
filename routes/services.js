@@ -33,27 +33,16 @@ router.post("/add", upload.single("image_file"), async (req, res) => {
     const { title, description, points } = req.body;
     let image_url = "";
 
-    if (!req.file) {
+    // Upload to Cloudinary if file exists
+    if (req.file) {
+      const result = await uploadToCloudinary(req.file.buffer);
+      image_url = result.secure_url;
+    } else {
       return res.status(400).json({ error: "Service image is required" });
     }
 
-    const uploadResult = await uploadToCloudinary(req.file.buffer);
-    image_url = uploadResult.secure_url;
-
-    // ✅ SAFE parsing
-    let pointsArray = [];
-
-    if (Array.isArray(points)) {
-      pointsArray = points;
-    } else if (typeof points === "string") {
-      try {
-        // Try JSON first
-        pointsArray = JSON.parse(points);
-      } catch {
-        // Fallback: comma-separated string
-        pointsArray = points.split(",").map(p => p.trim());
-      }
-    }
+    // Ensure points is handled as an array (PostgreSQL TEXT[])
+    const pointsArray = Array.isArray(points) ? points : JSON.parse(points || "[]");
 
     const result = await pool.query(
       `INSERT INTO services (title, image_url, description, points)
@@ -71,7 +60,6 @@ router.post("/add", upload.single("image_file"), async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
-
 
 // ==========================
 // GET ALL SERVICES
